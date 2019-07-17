@@ -157,19 +157,22 @@ class Display(BoxLayout):
                         Fouter = BoxLayout(orientation='horizontal',padding = [100,100,100,100])
                         Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=50)
 
+                        #Different colors convey differnt chip statuses
                         rimg = Image(source='red.png')
                         gimg = Image(source='green.png')
                         yimg = Image(source='yellow.png')
                         bimg = Image(source='gray.png')
-                        
-                        curimg = yimg
+                        curimg = bimg
+
+                        #Buttons to run and kill testing script
                         begEcho = Button(height=100,text="Begin Echo", id = 'echo')
                         kill = Button(height=100,text="Kill All", id = 'kill',background_color=(1,0,0,1))
                         begEcho.bind(on_press=myChip.keepEcho)
                         kill.bind(on_press=myChip.killer)
                         
-                    
+                        #Run check every 1/2 sec
                         Clock.schedule_interval(docheck, 0.5)
+
                         Finner.add_widget(begEcho)
                         Finner.add_widget(kill)
                         Fouter.add_widget(Finner)
