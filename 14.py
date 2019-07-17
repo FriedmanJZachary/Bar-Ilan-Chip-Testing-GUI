@@ -53,8 +53,8 @@ class Display(BoxLayout):
                             print('Yellow')
                             return 2
                     except:
-                        print('ERROR Red')
-                        return 1
+                        print('ERROR gray')
+                        return 3
 
 		#Recursive function that searches through all widgets for a given ID
                 def findByID(screen, ID):
@@ -137,26 +137,22 @@ class Display(BoxLayout):
                         self.name = "Four"
 
 			#Checks the state of .txt file
-                        class Checker(object):
-                            def docheck(obj,*args):
-                                print('Check Confirmed')
-                                val = check()
-                                if val==0:
-                                    print('Check Positive')
-                                    Fouter.clear_widgets()
-                                    curimg = gimg
-                                    Fouter.add_widget(Finner)
-                                    Fouter.add_widget(curimg)
-                                elif val==1:
-                                    curimg = rimg
-                                    Fouter.clear_widgets()
-                                    Fouter.add_widget(Finner)
-                                    Fouter.add_widget(curimg)                                 
-                                else:
-                                    curimg = yimg
-                                    Fouter.clear_widgets()
-                                    Fouter.add_widget(Finner)
-                                    Fouter.add_widget(curimg)
+                        def docheck(obj,*args):
+                            print('Check Confirmed')
+                            val = check()
+                            Fouter.clear_widgets()
+                            if val==0:
+                                print('Check Positive')
+                                curimg = gimg                                   
+                            elif val==1:
+                                curimg = rimg                                 
+                            elif val==2:
+                                curimg = yimg
+                            else:
+                                curimg = bimg
+
+                            Fouter.add_widget(Finner)
+                            Fouter.add_widget(curimg)
                             
                         Fouter = BoxLayout(orientation='horizontal',padding = [100,100,100,100])
                         Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=50)
@@ -164,6 +160,7 @@ class Display(BoxLayout):
                         rimg = Image(source='red.png')
                         gimg = Image(source='green.png')
                         yimg = Image(source='yellow.png')
+                        bimg = Image(source='gray.png')
                         
                         curimg = yimg
                         begEcho = Button(height=100,text="Begin Echo", id = 'echo')
@@ -172,7 +169,7 @@ class Display(BoxLayout):
                         kill.bind(on_press=myChip.killer)
                         
                     
-                        Clock.schedule_interval(Checker.docheck, 0.5)
+                        Clock.schedule_interval(docheck, 0.5)
                         Finner.add_widget(begEcho)
                         Finner.add_widget(kill)
                         Fouter.add_widget(Finner)
