@@ -11,16 +11,21 @@ from kivy.uix.widget import Widget
 from kivy.properties import ObjectProperty
 from kivy.config import Config
 from kivy.uix.checkbox import CheckBox
+from kivy.uix.togglebutton import ToggleButton
 from kivy.graphics import *
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.event import EventDispatcher
 from kivy.properties import StringProperty
+from kivy.core.window import Window
 from kivy.clock import Clock
 from multiprocessing import Process
+from kivy.uix.switch import Switch
+import time
 import sys
 import os
 
 Config.set('kivy','window_icon','sample.png')
+Window.size = (800,600)
 
 def myprint(obj,*args):
     print('BUTTON CLICKED')
@@ -32,29 +37,8 @@ class Display(BoxLayout):
 		#Print from data from one screen using another
                 def foo2(obj,*args):
                     print('Text of Foo2')
-                    print("Here's the thing: " + str(findByID(s1, 'subID')))
-                    print("Here's the other thing: " + findByID(s1, 'text1').text)
-
-		#Check text file for condition; will be used to evaluate chip state
-                def check():
-                    try:
-                        fileHandle = open('dump.txt',"r")
-                        lineList = fileHandle.readlines()
-                        fileHandle.close()
-                        last = lineList[len(lineList)-3]
-                        print('2nd-to-last Line: ' + last)
-                        if "OK" in last:
-                            print('Green')
-                            return 0
-                        elif "Fail" in last:
-                            print('Red')
-                            return 1
-                        else:
-                            print('Yellow')
-                            return 2
-                    except:
-                        print('ERROR gray')
-                        return 3
+                    print("Here's the thing: " + str(findByID(s2, 'subID')))
+                    print("Here's the other thing: " + findByID(s2, 'text1').text)
 
 		#Recursive function that searches through all widgets for a given ID
                 def findByID(screen, ID):
@@ -76,10 +60,94 @@ class Display(BoxLayout):
                     return findByID.selectedChild
 
                 #Screens are their own classes, formed within the initialization of the display itself
+                
                 class Screen_One(Screen):
+                    def __init__(self, **kwargs):
+                        super(Screen_One, self).__init__(**kwargs)
+                        self.name = "One"
+                        
+                        #Different colors convey differnt chip statuses
+                        rimg = Image(source='red.png')
+                        gimg = Image(source='green.png')
+                        yimg = Image(source='yellow.png')
+                        bimg = Image(source='gray.png')
+                        curimg = bimg
+                        
+                        #Checks the state of .txt file
+                        def docheck(obj,*args):
+                            checkval = 10
+                            if abs(myChip.count) < checkval or keep.active == True:
+                                print('Check Confirmed')
+                                #nonlocal curimg
+                                curimg = myChip.check(rimg, gimg, yimg, bimg)
+                                Fimg.clear_widgets()
+                                Fimg.add_widget(begEcho)
+                                Fimg.add_widget(curimg)
+                                print('Count = ' + str(myChip.count))
+                            else:
+                                #myChip.killer()
+                                pass
+                        
+                        Fouter = BoxLayout(orientation='horizontal',padding = [10,10,10,10])
+                        Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=30)
+                        
+                        #Buttons to run and kill testing script
+                        begEcho = Button(height=100,text="Connect to Chip", id = 'echo')
+                        kill = Button(height=100,text="Kill All", id = 'kill',background_color=(1,0,0,1))
+                        begEcho.bind(on_press=myChip.keepEcho)
+                        kill.bind(on_press=myChip.killer)
+                        choose = Button(height=10, text="Choose Chip", id = 'choose')
+                        
+                        #Text input options
+                        Finner2 = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=70)
+                        volt = TextInput(text="VDD", id = 'volt')
+                        volt2 = TextInput(text="VDDE", id = 'volt2')
+                        volt3 = TextInput(text="VBOOST", id = 'volt3')
+                        volt4 = TextInput(text="VMEM", id = 'volt4')
+                        freq = TextInput(size_hint=(1, 1), text="Frequency", id = 'freq')
+                        Finner2.add_widget(volt)
+                        Finner2.add_widget(volt2)
+                        Finner2.add_widget(volt3)
+                        Finner2.add_widget(volt4)
+                        Finner2.add_widget(freq)
+                        
+                        #Run check every 1/2 sec
+                        Clock.schedule_interval(docheck, 0.5)
+                        
+                        #Checkbox Section
+                        Fbox = BoxLayout(orientation='horizontal',padding = [0,0,0,0])
+                        ck = Label(text="Bist (Not Direct)")
+                        bist = Switch(active=True)
+                        Fbox.add_widget(ck)
+                        Fbox.add_widget(bist)
+                        Finner.add_widget(Fbox)
+                        
+                        #Checkbox Section
+                        Fkeep = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
+                        clab = Label(text="Continue echo")
+                        keep = Switch(active=False)
+                        Fkeep.add_widget(clab)
+                        Fkeep.add_widget(keep)
+                        Finner.add_widget(Fkeep)
+                    
+                        #Image Section
+                        Fimg = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
+                        Fimg.add_widget(begEcho)
+                        Fimg.add_widget(curimg)
+                        Finner.add_widget(Fimg)
+
+                        #Joining all sections
+                        Finner.add_widget(kill)
+                        Finner.add_widget(choose)
+                        Fouter.add_widget(Finner)
+                        Fouter.add_widget(Finner2)
+                        self.add_widget(Fouter)
+                
+                
+                class Screen_Two(Screen):
                         def __init__(self, **kwargs):
-                                super(Screen_One, self).__init__(**kwargs) 
-                                self.name = "One"
+                                super(Screen_Two, self).__init__(**kwargs)
+                                self.name = "Two"
                                 
 				#Nested grids allow for better arrangement of widgets
                                 outer = GridLayout(cols=1, pos=(00, 00),size=(Display.width, Display.height))
@@ -97,14 +165,13 @@ class Display(BoxLayout):
                                 
                                 widList = [ckL1, ck1, txtL1, txt1, ckL2, ck2, txtL2, txt2]
                                 for wid in widList:
-                                        inner.add_widget(wid)
+                                    inner.add_widget(wid)
                                 outer.add_widget(inner)
                                 
                                 submit = AnchorLayout(anchor_y='bottom',padding = [100,100,100,100])
                                 btnS = Button(height=10, text="Submit", id = 'subID')
                                 submit.add_widget(btnS)
                                 outer.add_widget(submit)
-
                                 self.add_widget(outer)
 
                                 def runtest(obj,*args):
@@ -117,10 +184,6 @@ class Display(BoxLayout):
                                  
                                 btnS.bind(on_press=runtest)
 
-                class Screen_Two(Screen):
-                    def __init__(self, **kwargs):
-                        super(Screen_Two, self).__init__(**kwargs)
-                        self.name = "Two"
 
                 class Screen_Three(Screen):
                     def __init__(self, **kwargs):
@@ -130,55 +193,12 @@ class Display(BoxLayout):
                         btnC = Button(text='Text')
                         btnC.bind(on_press = foo2)
                         self.add_widget(btnC)
-
+                            
                 class Screen_Four(Screen):
                     def __init__(self, **kwargs):
                         super(Screen_Four, self).__init__(**kwargs)
                         self.name = "Four"
 
-			#Checks the state of .txt file
-                        def docheck(obj,*args):
-                            print('Check Confirmed')
-                            val = check()
-                            Fouter.clear_widgets()
-                            if val==0:
-                                print('Check Positive')
-                                curimg = gimg                                   
-                            elif val==1:
-                                curimg = rimg                                 
-                            elif val==2:
-                                curimg = yimg
-                            else:
-                                curimg = bimg
-
-                            Fouter.add_widget(Finner)
-                            Fouter.add_widget(curimg)
-                            
-                        Fouter = BoxLayout(orientation='horizontal',padding = [100,100,100,100])
-                        Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=50)
-
-                        #Different colors convey differnt chip statuses
-                        rimg = Image(source='red.png')
-                        gimg = Image(source='green.png')
-                        yimg = Image(source='yellow.png')
-                        bimg = Image(source='gray.png')
-                        curimg = bimg
-
-                        #Buttons to run and kill testing script
-                        begEcho = Button(height=100,text="Begin Echo", id = 'echo')
-                        kill = Button(height=100,text="Kill All", id = 'kill',background_color=(1,0,0,1))
-                        begEcho.bind(on_press=myChip.keepEcho)
-                        kill.bind(on_press=myChip.killer)
-                        
-                        #Run check every 1/2 sec
-                        Clock.schedule_interval(docheck, 0.5)
-
-                        Finner.add_widget(begEcho)
-                        Finner.add_widget(kill)
-                        Fouter.add_widget(Finner)
-                        Fouter.add_widget(curimg)
-                        self.add_widget(Fouter)
-                
                 #Begin adding elements to main display: includes screens and navigation buttons
                 layout = BoxLayout(orientation='vertical')
                 self.add_widget(layout)
@@ -186,18 +206,18 @@ class Display(BoxLayout):
                 btnBar = BoxLayout(orientation='horizontal', size_hint=(1, None),height='48dp')
                 
                 with self.canvas.before:
-                    Color(0, 0, 0.15)
+                    Color(0, 0.05, 0.15)
                     Rectangle(pos=(0, 0), size=(2000, 2000))
                 
+                #create screens (as instances of the above classes) and buttons to navigate between them
                 s1 = Screen_One()
                 s2 = Screen_Two()
                 s3 = Screen_Three()
                 s4 = Screen_Four()
-                
-                btn1 = Button(text='1', on_press=lambda a: sm.switch_to(s1))
-                btn2 = Button(text='2', on_press=lambda a: sm.switch_to(s2))
-                btn3 = Button(text='3', on_press=lambda a: sm.switch_to(s3))
-                btn4 = Button(text='4', on_press=lambda a: sm.switch_to(s4))
+                btn1 = Button(text='GENERAL', on_press=lambda a: sm.switch_to(s1))
+                btn2 = Button(text='BIST', on_press=lambda a: sm.switch_to(s2))
+                btn3 = Button(text='DIRECT', on_press=lambda a: sm.switch_to(s3))
+                btn4 = Button(text='DEMO', on_press=lambda a: sm.switch_to(s4))
                
                 buttonlist = [btn1, btn2, btn3, btn4]
                 screenlist = [s1, s2, s3, s4]
@@ -212,6 +232,7 @@ class Display(BoxLayout):
 class chipOn:
     def __init__(self):
         self.testtime = False
+        self.count = 0
 
     #Begin testing if not already doing so
     def keepEcho(self,obj,*arg):
@@ -229,12 +250,36 @@ class chipOn:
 
     #Kill testing process initiated by test()
     def killer(self,obj,*args):
+        self.count = 0
         self.testtime = False
         print('Test Time = ' + str(self.testtime))
         os.system('./killall_measurements')
         os.system('rm dump.txt')
         f=open("dump.txt", "w+")
         f.close()
+
+    #Check text file for condition; will be used to evaluate chip state
+    def check(self,rimg,gimg,yimg,bimg):
+        try:
+            fileHandle = open('dump.txt',"r")
+            lineList = fileHandle.readlines()
+            fileHandle.close()
+            last = lineList[len(lineList)-3]
+            print('2nd-to-last Line: ' + last)
+            if "OK" in last:
+                print('Green')
+                myChip.count=0 if myChip.count<0 else myChip.count+1
+                return gimg
+            elif "Fail" in last:
+                print('Red')
+                myChip.count=0 if myChip.count>0 else myChip.count-1
+                return rimg
+            else:
+                print('Yellow')
+                return yimg
+        except:
+            print('ERROR gray')
+            return bimg
 
 myChip = chipOn()
 
