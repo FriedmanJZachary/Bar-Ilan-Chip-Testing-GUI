@@ -34,8 +34,14 @@ class Display(BoxLayout):
         def __init__(self, **kwargs):
                 super(Display, self).__init__(**kwargs)
                 
-                #Set initial frequency value
-                fval = "?"
+                #Set initial values
+                DMfval = "?"
+                DMval2 = "?"
+                DMval3 = "?"
+                
+                CMfval = "?"
+                CMval2 = "?"
+                CMval3 = "?"
 
                 #Print from data from one screen using another
                 def foo2(obj,*args):
@@ -71,29 +77,68 @@ class Display(BoxLayout):
 
                         #Mixed Button
                         def mixed(*args):
+                            os.system('')
                             print('Mixed Mode Button Pushed')
-                            p = Process(target=mixedprocess)
-                            p.start()
-                            nonlocal fval
-                            fval = "95"
+                            nonlocal DMfval
+                            DMfval = "21"
+                            nonlocal DMval2
+                            DMval2 = "22"
+                            nonlocal DMval3
+                            DMval3 = "23"
+                            
+                            nonlocal CMfval
+                            CMfval = "24"
+                            nonlocal CMval2
+                            CMval2 = "25"
+                            nonlocal CMval3
+                            CMval3 = "26"
+                            
+                            Clock.schedule_once(mixeddelay, 5)
                             disp()
-
-                        def mixedprocess(*args):
-                             os.system('./run_test scripts/echo_loop.pl')
-
+                        
+                        #Mixed Button
+                        def mixeddelay(*args):
+                            os.system('')
+                            print('Mixed Mode Delay Done')
+                            nonlocal DMfval
+                            DMfval = "44"
+                            nonlocal DMval2
+                            DMval2 = "45"
+                            nonlocal DMval3
+                            DMval3 = "46"
+                            
+                            nonlocal CMfval
+                            CMfval = "47"
+                            nonlocal CMval2
+                            CMval2 = "48"
+                            nonlocal CMval3
+                            CMval3 = "4"
+                            
+                            disp()
+                        
                         #Static Button
                         def static(*args):
-                            p2 = Process(target=staticprocess)
-                            p2.start()
+                            os.system('')
                             print('Static Mode Button Pushed')
-                            nonlocal fval
-                            fval = "40"
+                            nonlocal DMfval
+                            DMfval = "33"
+                            nonlocal CMfval
+                            CMfval = "34"
+                            
+                            Clock.schedule_once(staticdelay, 5)
                             disp()
 
                         
-                        def staticprocess(*args):
-                             os.system('./run_test scripts/echo_loop.pl')
-
+                        #Static Button
+                        def staticdelay(*args):
+                            os.system('')
+                            print('Static Mode Delay Done')
+                            nonlocal DMfval
+                            DMfval = "11"
+                            nonlocal CMfval
+                            CMfval = "12"
+                            
+                            disp()
 
                         #Formatting
                         inner = GridLayout(cols=2, rows=2, padding=10, pos=(00, 00),size=(Display.width, Display.height),spacing=50)
@@ -115,9 +160,20 @@ class Display(BoxLayout):
                         def disp(*args):
                             outer.clear_widgets()
                             self.clear_widgets()
-                            lab = Label(text="Frequency: " + fval + " HZ",font_size='20sp')
+                            
+                            typeVals = BoxLayout(orientation='horizontal')
+                            
+                            labtxt1 = "DML:\n___________________\n\nFrequency: " + DMfval + " HZ \n Average Energy: " + DMval2 + "\n Errors: " + DMval3 + "\n"
+                            
+                            labtxt2 = "CMOS:\n___________________\n\nFrequency: " + CMfval + " HZ \n Average Energy: " + CMval2 + "\n Errors: " + CMval3 + "\n"
+                            lab = Label(text=labtxt1,font_size='20sp')
+                            lab2 = Label(text=labtxt2,font_size='20sp')
+                            
+                            typeVals.add_widget(lab)
+                            typeVals.add_widget(lab2)
+                            
                             outer.add_widget(inner)
-                            outer.add_widget(lab)
+                            outer.add_widget(typeVals)
                             self.add_widget(outer)
                         
                         disp()
@@ -131,14 +187,26 @@ class Display(BoxLayout):
                         
                         #KILL Button
                         def killer(*args):
-                            os.system('./killall_measurements')
+                            os.system('')
                             print('KILL ALL Button Pushed')
-                            nonlocal fval
-                            fval = '?'
+                            nonlocal DMfval
+                            DMfval = '?'
+                            nonlocal DMval2
+                            DMval2 = "?"
+                            nonlocal DMval3
+                            DMval3 = "?"
+                        
+                            nonlocal CMfval
+                            CMfval = '?'
+                            nonlocal CMval2
+                            CMval2 = "?"
+                            nonlocal CMval3
+                            CMval3 = "?"
+                        
                         
                         outer2 = GridLayout(cols=1, rows=2, padding=200, pos=(00, 00),size=(Display.width, Display.height),spacing=50)
                         
-                        kill = Button(text="Kill All",font_size='20sp',background_color=(1,0,0,1))
+                        kill = Button(text="Kill All",font_size='25sp',background_color=(1,0,0,1))
                         kill.bind(on_press=killer)
                         outer2.add_widget(kill)
                         self.add_widget(outer2)
