@@ -73,23 +73,25 @@ class Display(BoxLayout):
                         bimg = Image(source='gray.png')
                         curimg = bimg
                         
+                        killedAlready = True
                         #Checks the state of .txt file
                         def docheck(obj,*args):
                             checkval = 10
                             if abs(myChip.count) < checkval or keep.active == True:
                                 print('Check Confirmed')
-                                #nonlocal curimg
+                                nonlocal curimg
                                 curimg = myChip.check(rimg, gimg, yimg, bimg)
                                 Fimg.clear_widgets()
                                 Fimg.add_widget(begEcho)
                                 Fimg.add_widget(curimg)
                                 print('Count = ' + str(myChip.count))
                             else:
-                                #myChip.killer()
-                                pass
+                                if myChip.testtime:
+                                    os.system('./killall_measurements')
+                                    myChip.testtime = False
                         
-                        Fouter = BoxLayout(orientation='horizontal',padding = [10,10,10,10])
-                        Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=30)
+                        Fouter = BoxLayout(orientation='horizontal',padding = [0,0,0,0])
+                        Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=60)
                         
                         #Buttons to run and kill testing script
                         begEcho = Button(height=100,text="Connect to Chip", id = 'echo')
@@ -100,21 +102,48 @@ class Display(BoxLayout):
                         
                         #Text input options
                         Finner2 = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=70)
-                        volt = TextInput(text="VDD", id = 'volt')
-                        volt2 = TextInput(text="VDDE", id = 'volt2')
-                        volt3 = TextInput(text="VBOOST", id = 'volt3')
-                        volt4 = TextInput(text="VMEM", id = 'volt4')
-                        freq = TextInput(size_hint=(1, 1), text="Frequency", id = 'freq')
-                        Finner2.add_widget(volt)
-                        Finner2.add_widget(volt2)
-                        Finner2.add_widget(volt3)
-                        Finner2.add_widget(volt4)
-                        Finner2.add_widget(freq)
+
+                        volt = TextInput(id = 'volt')
+                        Lvolt = Label(text="VDD:")
+                        Bvolt = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
+                        Bvolt.add_widget(Lvolt)
+                        Bvolt.add_widget(volt)
+
+                        volt2 = TextInput(id = 'volt2')
+                        Lvolt2= Label(text="VDDE:")
+                        Bvolt2 = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
+                        Bvolt2.add_widget(Lvolt2)
+                        Bvolt2.add_widget(volt2)
+
+                        volt3 = TextInput(id = 'volt3')
+                        Lvolt3 = Label(text="VBOOST:")
+                        Bvolt3 = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
+                        Bvolt3.add_widget(Lvolt3)
+                        Bvolt3.add_widget(volt3)
+
+                        volt4 = TextInput(id = 'volt4')
+                        Lvolt4 = Label(text="VMEM:")
+                        Bvolt4 = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
+                        Bvolt4.add_widget(Lvolt4)
+                        Bvolt4.add_widget(volt4)
+
+                        freq = TextInput(size_hint=(1, 1), id = 'freq')
+                        Lfreq = Label(text="Frequency:")
+                        Bfreq = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
+                        Bfreq.add_widget(Lfreq)
+                        Bfreq.add_widget(freq)
+
+                        Finner2.add_widget(Bvolt)
+                        Finner2.add_widget(Bvolt2)
+                        Finner2.add_widget(Bvolt3)
+                        Finner2.add_widget(Bvolt4)
+                        Finner2.add_widget(Bfreq)
+                        #End text input options
                         
                         #Run check every 1/2 sec
                         Clock.schedule_interval(docheck, 0.5)
                         
-                        #Checkbox Section
+                        #Checkbox Section 1
                         Fbox = BoxLayout(orientation='horizontal',padding = [0,0,0,0])
                         ck = Label(text="Bist (Not Direct)")
                         bist = Switch(active=True)
@@ -122,20 +151,20 @@ class Display(BoxLayout):
                         Fbox.add_widget(bist)
                         Finner.add_widget(Fbox)
                         
-                        #Checkbox Section
-                        Fkeep = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
-                        clab = Label(text="Continue echo")
-                        keep = Switch(active=False)
-                        Fkeep.add_widget(clab)
-                        Fkeep.add_widget(keep)
-                        Finner.add_widget(Fkeep)
-                    
                         #Image Section
                         Fimg = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
                         Fimg.add_widget(begEcho)
                         Fimg.add_widget(curimg)
                         Finner.add_widget(Fimg)
 
+                        #Checkbox Section 2
+                        Fkeep = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
+                        clab = Label(text="Continue echo")
+                        keep = Switch(active=False)
+                        Fkeep.add_widget(clab)
+                        Fkeep.add_widget(keep)
+                        Finner.add_widget(Fkeep)
+                
                         #Joining all sections
                         Finner.add_widget(kill)
                         Finner.add_widget(choose)
