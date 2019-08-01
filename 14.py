@@ -25,9 +25,38 @@ from kivy.uix.switch import Switch
 import time
 import sys
 import os
+sys.path.insert(0, "/opt/rh/rh-python36/root/usr/lib/python3.6/site-packages")
+import serial
+
 
 Config.set('kivy','window_icon','sample.png')
 Window.size = (800,600)
+
+#Voltage supply configuration
+deviceName = '/dev/ttyUSB0'
+
+#Serial connection to voltage supply
+ser = serial.Serial(
+    port=deviceName,
+    timeout=2,
+    parity=serial.PARITY_NONE,
+    stopbits=2,
+    dsrdtr=1
+)
+
+#Writes a command directy to the supply
+def wcom(cmd):
+    cmd += '\n'
+    ser.write(cmd.encode(encoding='ascii',errors='strict'))
+
+#Sequentially shuts supply, sets voltage and current values, and turns the supply back on
+def setSequence(rail,volt,curr):
+    wcom('SYSTEM:REMOTE')
+    wcom('OUTPUT:STATE ' + ('OFF'))
+    #time.sleep(2)
+    wcom('APPL %s, %s, %s' % (rail,volt,curr))
+    wcom('OUTPUT:STATE ' + ('ON'))
+
 
 def myprint(obj,*args):
     print('BUTTON CLICKED')
@@ -111,10 +140,10 @@ class Display(BoxLayout):
                                 self.rect.size = instance.size
 
                         class addrow():
-                            def __init__(self,rail,supply,**kwargs):
+                            def __init__(self,rail,supply,myID,**kwargs):
                                 self.rail = Label(text=rail)
                                 self.valLay  = AnchorLayout(anchor_x='right', anchor_y='center')
-                                self.val = TextInput(size_hint=(1, None),height=31,multiline=False,text='0.9')
+                                self.val = TextInput(size_hint=(1, None),height=31,multiline=False,text='0.9',id=myID)
                                 self.valLay.add_widget(self.val)
                                 self.state = Switch(active=True)
 
@@ -123,13 +152,16 @@ class Display(BoxLayout):
                                 rows[supply][-1].add_widget(self.valLay)
                                 rows[supply][-1].add_widget(self.state)
                                 print("Supply: " + str(supply))
+                                
+                        def setVoltage(obj):
+                            setSequence('P25V',findByID(s1, '25sup1').text,'0.2')
+                            #setSequence('P6V',findByID(s1, '6sup1').text,'0.2')
+                            
 
                         Fouter = BoxLayout(orientation='horizontal',padding = [0,0,0,0])
                         Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=60)
                         Finner2 = BoxLayout(orientation='vertical',padding = [30,30,30,30], spacing=60)
-
 #FINNER2
-
                         #Power supply control sections
                         vlay = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
                         vlay2 = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
@@ -138,14 +170,13 @@ class Display(BoxLayout):
                         row2 = []
                         rows = [row1,row2]
 
- 
-                        addrow('+6',0)
-                        addrow('+25',0)
-                        addrow('-25',0)
+                        addrow('+6',0,'6sup1')
+                        addrow('+25',0,'25sup1')
+                        addrow('-25',0,'-25sup1')
 
-                        addrow('+6',1)
-                        addrow('+25',1)
-                        addrow('-25',1)
+                        addrow('+6',1,'6sup2')
+                        addrow('+25',1,'25sup2')
+                        addrow('-25',1,'-25sup2')
 
                         vlay.add_widget(Label(text='Supply 1'))
                         for row in rows[0]:
@@ -157,15 +188,15 @@ class Display(BoxLayout):
                             print('blitting row: ' + str(row))
                             vlay2.add_widget(row)
 
-
+                        #Button to set power supply settings
                         initiate = Button(size_hint_y=None,height=45,text='Initiate', id = 'initiate')
+                        initiate.bind(on_press=setVoltage)
+
+                        #Joining all sections
                         Finner2.add_widget(vlay)
                         Finner2.add_widget(vlay2)
                         Finner2.add_widget(initiate)
-        
-
 #FINNER1
-
                         #Buttons to run and kill testing script
                         begEcho = Button(height=100,text="Connect to Chip", id = 'echo')
                         kill = Button(height=100,text="Kill All", id = 'kill',background_color=(1,0,0,1))
