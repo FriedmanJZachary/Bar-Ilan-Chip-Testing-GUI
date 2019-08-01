@@ -13,8 +13,10 @@ from kivy.config import Config
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.togglebutton import ToggleButton
 from kivy.graphics import *
+from kivy.graphics import Color, Rectangle
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.event import EventDispatcher
+from kivy.graphics import *
 from kivy.properties import StringProperty
 from kivy.core.window import Window
 from kivy.clock import Clock
@@ -66,7 +68,7 @@ class Display(BoxLayout):
                         super(Screen_One, self).__init__(**kwargs)
                         self.name = "One"
                         
-                        #Different colors convey differnt chip statuses
+                        #Different colors convey different chip statuses
                         rimg = Image(source='red.png')
                         gimg = Image(source='green.png')
                         yimg = Image(source='yellow.png')
@@ -90,9 +92,80 @@ class Display(BoxLayout):
                                     os.system('./killall_measurements')
                                     myChip.testtime = False
                         
+#_______________________________________________________________________
+
+                        class Vbox(BoxLayout):
+
+                            def __init__(self, **kwargs):
+                                # make sure we aren't overriding any important functionality
+                                super(Vbox, self).__init__(**kwargs)
+
+                                with self.canvas.before:
+                                    Color(0, .2, .3, 1)  # green; colors range from 0-1 instead of 0-255
+                                    self.rect = Rectangle(size=self.size, pos=self.pos)
+                                    
+                                self.bind(size=self._update_rect, pos=self._update_rect)
+
+                            def _update_rect(self, instance, value):
+                                self.rect.pos = instance.pos
+                                self.rect.size = instance.size
+
+                        class addrow():
+                            def __init__(self,rail,supply,**kwargs):
+                                self.rail = Label(text=rail)
+                                self.valLay  = AnchorLayout(anchor_x='right', anchor_y='center')
+                                self.val = TextInput(size_hint=(1, None),height=31,multiline=False,text='0.9')
+                                self.valLay.add_widget(self.val)
+                                self.state = Switch(active=True)
+
+                                rows[supply].append(BoxLayout())
+                                rows[supply][-1].add_widget(self.rail)
+                                rows[supply][-1].add_widget(self.valLay)
+                                rows[supply][-1].add_widget(self.state)
+                                print("Supply: " + str(supply))
+
                         Fouter = BoxLayout(orientation='horizontal',padding = [0,0,0,0])
                         Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=60)
-                        
+                        Finner2 = BoxLayout(orientation='vertical',padding = [30,30,30,30], spacing=60)
+
+#FINNER2
+
+                        #Power supply control sections
+                        vlay = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
+                        vlay2 = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
+
+                        row1 = []
+                        row2 = []
+                        rows = [row1,row2]
+
+ 
+                        addrow('+6',0)
+                        addrow('+25',0)
+                        addrow('-25',0)
+
+                        addrow('+6',1)
+                        addrow('+25',1)
+                        addrow('-25',1)
+
+                        vlay.add_widget(Label(text='Supply 1'))
+                        for row in rows[0]:
+                            print('blitting row: ' + str(row))
+                            vlay.add_widget(row)
+
+                        vlay2.add_widget(Label(text='Supply 2'))
+                        for row in rows[1]:
+                            print('blitting row: ' + str(row))
+                            vlay2.add_widget(row)
+
+
+                        initiate = Button(size_hint_y=None,height=45,text='Initiate', id = 'initiate')
+                        Finner2.add_widget(vlay)
+                        Finner2.add_widget(vlay2)
+                        Finner2.add_widget(initiate)
+        
+
+#FINNER1
+
                         #Buttons to run and kill testing script
                         begEcho = Button(height=100,text="Connect to Chip", id = 'echo')
                         kill = Button(height=100,text="Kill All", id = 'kill',background_color=(1,0,0,1))
@@ -100,45 +173,6 @@ class Display(BoxLayout):
                         kill.bind(on_press=myChip.killer)
                         choose = Button(height=10, text="Choose Chip", id = 'choose')
                         
-                        #Text input options
-                        Finner2 = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=70)
-
-                        volt = TextInput(id = 'volt')
-                        Lvolt = Label(text="VDD:")
-                        Bvolt = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
-                        Bvolt.add_widget(Lvolt)
-                        Bvolt.add_widget(volt)
-
-                        volt2 = TextInput(id = 'volt2')
-                        Lvolt2= Label(text="VDDE:")
-                        Bvolt2 = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
-                        Bvolt2.add_widget(Lvolt2)
-                        Bvolt2.add_widget(volt2)
-
-                        volt3 = TextInput(id = 'volt3')
-                        Lvolt3 = Label(text="VBOOST:")
-                        Bvolt3 = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
-                        Bvolt3.add_widget(Lvolt3)
-                        Bvolt3.add_widget(volt3)
-
-                        volt4 = TextInput(id = 'volt4')
-                        Lvolt4 = Label(text="VMEM:")
-                        Bvolt4 = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
-                        Bvolt4.add_widget(Lvolt4)
-                        Bvolt4.add_widget(volt4)
-
-                        freq = TextInput(size_hint=(1, 1), id = 'freq')
-                        Lfreq = Label(text="Frequency:")
-                        Bfreq = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
-                        Bfreq.add_widget(Lfreq)
-                        Bfreq.add_widget(freq)
-
-                        Finner2.add_widget(Bvolt)
-                        Finner2.add_widget(Bvolt2)
-                        Finner2.add_widget(Bvolt3)
-                        Finner2.add_widget(Bvolt4)
-                        Finner2.add_widget(Bfreq)
-                        #End text input options
                         
                         #Run check every 1/2 sec
                         Clock.schedule_interval(docheck, 0.5)
@@ -228,6 +262,37 @@ class Display(BoxLayout):
                         super(Screen_Four, self).__init__(**kwargs)
                         self.name = "Four"
 
+                        class Vbox(BoxLayout):
+
+                            def __init__(self, **kwargs):
+                                # make sure we aren't overriding any important functionality
+                                super(Vbox, self).__init__(**kwargs)
+
+                                with self.canvas.before:
+                                    Color(.5, .5, .6, 1)  # green; colors range from 0-1 instead of 0-255
+                                    self.rect = Rectangle(size=self.size, pos=self.pos)
+                                    
+                                self.bind(size=self._update_rect, pos=self._update_rect)
+
+                            def _update_rect(self, instance, value):
+                                self.rect.pos = instance.pos
+                                self.rect.size = instance.size
+
+                        vlay = Vbox(orientation='horizontal',padding = [10,10,10,10], spacing=10)
+                        vlay2 = Vbox(orientation='horizontal',padding = [10,10,10,10], spacing=10)
+                        outer = BoxLayout(orientation='vertical',padding = [10,10,10,10], spacing=10)
+                        
+                        l1 = Label(text='label 1')
+                        l2 = Label(text='label 2')
+                        vlay.add_widget(l1)
+                        vlay2.add_widget(l2)
+
+              
+                        outer.add_widget(vlay)
+                        outer.add_widget(vlay2)
+                        self.add_widget(outer)
+
+
                 #Begin adding elements to main display: includes screens and navigation buttons
                 layout = BoxLayout(orientation='vertical')
                 self.add_widget(layout)
@@ -312,13 +377,13 @@ class chipOn:
 
 myChip = chipOn()
 
-class Demo1App(App):
+class BEER(App):
     num1 = 40
     def build(self):
         return Display()
 
 if __name__ == '__main__':
-    myapp = Demo1App()
+    myapp = BEER()
     myapp.run()     
     #Anything below this point will run only after the window is closed
     print('Application Terminated')        
