@@ -10,6 +10,7 @@ from kivy.uix.button import Button
 from kivy.uix.widget import Widget
 from kivy.properties import ObjectProperty
 from kivy.config import Config
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.togglebutton import ToggleButton
 from kivy.graphics import *
@@ -31,32 +32,6 @@ import serial
 
 Window.size = (800,600)
 
-#Voltage supply configuration
-deviceName = '/dev/ttyUSB0'
-
-#Serial connection to voltage supply
-ser = serial.Serial(
-    port=deviceName,
-    timeout=2,
-    parity=serial.PARITY_NONE,
-    stopbits=2,
-    dsrdtr=1
-)
-
-#Writes a command directy to the supply
-def wcom(cmd):
-    cmd += '\n'
-    ser.write(cmd.encode(encoding='ascii',errors='strict'))
-
-#Sequentially shuts supply, sets voltage and current values, and turns the supply back on
-def setSequence(rail,volt,curr):
-    wcom('SYSTEM:REMOTE')
-    wcom('OUTPUT:STATE ' + ('OFF'))
-    #time.sleep(0.1)
-    wcom('APPL %s, %s, %s' % (rail,volt,curr))
-    wcom('OUTPUT:STATE ' + ('ON'))
-
-
 def myprint(obj,*args):
     print('BUTTON CLICKED')
 
@@ -76,12 +51,12 @@ class Display(BoxLayout):
                     def findID(screen, ID):
                         if screen.children:
                             for child in screen.children:
-                                print('Child: ' + str(child))
-                                print('ID: ' + str(child.id))
+                                #print('Child: ' + str(child))
+                                #print('ID: ' + str(child.id))
                                 if str(child.id) == ID:
-                                    print('Gotchya')
+                                    #print('Gotchya')
                                     findByID.selectedChild = child
-                                    print('Selected Child: ' + str(findByID.selectedChild))
+                                    #print('Selected Child: ' + str(findByID.selectedChild))
                                     return 1
                                 else:
                                     findID(child, ID)
@@ -120,12 +95,30 @@ class Display(BoxLayout):
                                     os.system('./killall_measurements')
                                     myChip.testtime = False
 
+                        def setVoltage(obj):
+                            if findByID(s1, '6state1').active:
+                                mySupply.setSequence('P6V',findByID(s1, '6sup1').text,mySupply.curmax)
+                                time.sleep(0.2)
+                            if findByID(s1, '25state1').active:
+                                mySupply.setSequence('P25V',findByID(s1, '25sup1').text,mySupply.curmax)
 
 
+                        #Boxes that contain voltage supply-setting elements
+                        class Vbox(BoxLayout):
 
-                        #_________________________________________
+                            def __init__(self, **kwargs):
+                                # make sure we aren't overriding any important functionality
+                                super(Vbox, self).__init__(**kwargs)
 
+                                with self.canvas.before:
+                                    Color(0, .2, .3, 1)  # green; colors range from 0-1 instead of 0-255
+                                    self.rect = Rectangle(size=self.size, pos=self.pos)
+            
+                                    self.bind(size=self._update_rect, pos=self._update_rect)
 
+                            def _update_rect(self, instance, value):
+                                self.rect.pos = instance.pos
+                                self.rect.size = instance.size
 
 
                         Fouter = BoxLayout(orientation='horizontal',padding = [0,0,0,0])
@@ -138,10 +131,6 @@ class Display(BoxLayout):
                         #Power supply control sections
                         vlay = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
                         vlay2 = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
-
-                        row1 = []
-                        row2 = []
-                        rows = [row1, row2]
 
                         s6v1 = '0.9'
                         s25v1 = '0.8'
@@ -158,10 +147,9 @@ class Display(BoxLayout):
                             vlay.clear_widgets()
                             vlay2.clear_widgets()
 
-                            nonlocal rows, row1, row2
-                            row1 = []
-                            row2 = []
-                            rows = [row1, row2]
+                            mySupply.row1 = []
+                            mySupply.row2 = []
+                            mySupply.rows = [mySupply.row1, mySupply.row2]
                 
                             if os.path.exists('voltagelog.txt'):
                                 file1 = open("voltagelog.txt","r") 
@@ -173,22 +161,22 @@ class Display(BoxLayout):
                                     print(values)
                                     i += 1
 
-                            addrow('+6',0,'6sup1','6state1',values[0])
-                            addrow('+25',0,'25sup1','25state1',values[1])
-                            addrow('-25',0,'-25sup1','-25state1',values[2])
+                            mySupply.addrow('+6',0,'6sup1','6state1',values[0])
+                            mySupply.addrow('+25',0,'25sup1','25state1',values[1])
+                            mySupply.addrow('-25',0,'-25sup1','-25state1',values[2])
                             print(values)
-                            addrow('+6',1,'6sup2','6state2',values[3])
-                            addrow('+25',1,'25sup2','25state2',values[4])
-                            addrow('-25',1,'-25sup2','-25state2',values[5])
+                            mySupply.addrow('+6',1,'6sup2','6state2',values[3])
+                            mySupply.addrow('+25',1,'25sup2','25state2',values[4])
+                            mySupply.addrow('-25',1,'-25sup2','-25state2',values[5])
 
 
                             vlay.add_widget(Label(text='Supply 1'))
-                            for row in rows[0]:
+                            for row in mySupply.rows[0]:
                                 print('blitting row: ' + str(row))
                                 vlay.add_widget(row)
                                 
                             vlay2.add_widget(Label(text='Supply 2'))
-                            for row in rows[1]:
+                            for row in mySupply.rows[1]:
                                 print('blitting row: ' + str(row))
                                 vlay2.add_widget(row)
 
@@ -205,7 +193,7 @@ class Display(BoxLayout):
                         write = Button(size_hint_y=None,height=45,text='Save')
                         read = Button(size_hint_y=None,height=45,text='Read')
                         Fvwrite.add_widget(write)
-                        write.bind(on_press=save)
+                        write.bind(on_press=mySupply.save)
                         Fvwrite.add_widget(read)
                         read.bind(on_press=blitVolt)
 
@@ -350,6 +338,11 @@ class Display(BoxLayout):
                         super(Screen_Five, self).__init__(**kwargs)
                         self.name = "Five"
                         
+
+                        def setVals(obj):
+                            mySupply.deviceName = findByID(s5,'dev').text
+                            mySupply.curmax = findByID(s5,'max').text 
+
                         outer = BoxLayout(orientation='horizontal', padding = [50,50,50,50])
                         inner = BoxLayout(orientation='vertical')
                         empty = Image(source='blank.png')
@@ -365,12 +358,15 @@ class Display(BoxLayout):
                             advrows[-1].add_widget(lab)
                             advrows[-1].add_widget(valLay)
 
-                        addrow('Supply 1 Location',deviceName,'id')
-                        addrow('Maximum Current','0.2','id2')
-
+                        addrow('Supply 1 Location',mySupply.deviceName,'dev')
+                        addrow('Maximum Current',mySupply.curmax,'max')
                         for row in advrows:
                             inner.add_widget(row)
                 
+                        submit = Button(text='Submit',size_hint_y=None,height=50)
+                        submit.bind(on_press=setVals)
+                        inner.add_widget(submit)
+
                         outer.add_widget(inner)
                         outer.add_widget(empty)
                         self.add_widget(outer)
@@ -459,69 +455,74 @@ class chipOn:
             #print('ERROR gray')
             return bimg
 
-myChip = chipOn()
-
-
-
 class vSet():
+    def __init__(self, **kwargs):
+        # make sure we aren't overriding any important functionality
+        super(vSet, self).__init__(**kwargs)
+        self.curmax = '0.2'
+        self.row1 = []
+        self.row2 = []
+        self.rows = [self.row1, self.row2]
+        #Voltage supply configuration
+        self.deviceName = '/dev/ttyUSB0'
+        
+    def addrow(self,rail,supply,myID,stateID,value,**kwargs):
+        rail = Label(text=rail)
+        valLay  = AnchorLayout(anchor_x='right', anchor_y='center')
+        val = TextInput(size_hint=(1, None),height=31,multiline=False,text=value,id=myID)
+        valLay.add_widget(val)
+        state = Switch(active=True,id=stateID)
+
+        self.rows[supply].append(BoxLayout())
+        self.rows[supply][-1].add_widget(rail)
+        self.rows[supply][-1].add_widget(valLay)
+        self.rows[supply][-1].add_widget(state)
+        print("Supply: " + str(supply))
+    
+    #Save the current voltage values by finding anchor layouts and reading from their children (the text inputs)
+    def save(self,obj):
+        try:
+            os.remove("voltagelog.txt")
+        except:
+            pass
+        file1 = open("voltagelog.txt","a+")
+        for row in self.rows:
+            for child in row:
+                inputs = child.children
+                #print(str(inputs))
+                anchor_inputs = [inp for inp in inputs if isinstance(inp, AnchorLayout)]
+                for ai in anchor_inputs:
+                    #print(str(ai))
+                    text_inputs = ai.children
+                    for ti in text_inputs:
+                        print(ti.text)
+                        file1.write(ti.text + '\n')
+
+    #Writes a command directy to the supply
+    def wcom(self,cmd):
+        cmd += '\n'
+        ser.write(cmd.encode(encoding='ascii',errors='strict'))
+
+    #Sequentially shuts supply, sets voltage and current values, and turns the supply back on
+    def setSequence(self,rail,volt,curr):
+        self.wcom('SYSTEM:REMOTE')
+        self.wcom('OUTPUT:STATE ' + ('OFF'))
+        #time.sleep(0.1)
+        self.wcom('APPL %s, %s, %s' % (rail,volt,curr))
+        self.wcom('OUTPUT:STATE ' + ('ON'))
 
 
+myChip = chipOn()
+mySupply = vSet()
 
-                        #Boxes that contain voltage supply-setting elements 
-                        class Vbox(BoxLayout):
-
-                            def __init__(self, **kwargs):
-                                # make sure we aren't overriding any important functionality
-                                super(Vbox, self).__init__(**kwargs)
-
-                                with self.canvas.before:
-                                    Color(0, .2, .3, 1)  # green; colors range from 0-1 instead of 0-255
-                                    self.rect = Rectangle(size=self.size, pos=self.pos)
-                                    
-                                self.bind(size=self._update_rect, pos=self._update_rect)
-
-                            def _update_rect(self, instance, value):
-                                self.rect.pos = instance.pos
-                                self.rect.size = instance.size
-
-                        def addrow(rail,supply,myID,stateID,value,**kwargs):
-                            rail = Label(text=rail)
-                            valLay  = AnchorLayout(anchor_x='right', anchor_y='center')
-                            val = TextInput(size_hint=(1, None),height=31,multiline=False,text=value,id=myID)
-                            valLay.add_widget(val)
-                            state = Switch(active=True,id=stateID)
-
-                            rows[supply].append(BoxLayout())
-                            rows[supply][-1].add_widget(rail)
-                            rows[supply][-1].add_widget(valLay)
-                            rows[supply][-1].add_widget(state)
-                            print("Supply: " + str(supply))
-                                
-                        def setVoltage(obj):
-                            if findByID(s1, '6state1').active:
-                                setSequence('P6V',findByID(s1, '6sup1').text,cur)
-                                time.sleep(0.2)
-                            if findByID(s1, '25state1').active:
-                                setSequence('P25V',findByID(s1, '25sup1').text,cur)
-                           
-                        #Save the current voltage values by finding anchor layouts and reading from their children (the text inputs)
-                        def save(obj):
-                            try:
-                                os.remove("voltagelog.txt")
-                            except:
-                                pass
-                            file1 = open("voltagelog.txt","a+") 
-                            for row in rows:
-                                for child in row:
-                                    inputs = child.children
-                                    #print(str(inputs))
-                                    anchor_inputs = [inp for inp in inputs if isinstance(inp, AnchorLayout)]
-                                    for ai in anchor_inputs:
-                                        #print(str(ai))
-                                        text_inputs = ai.children
-                                        for ti in text_inputs:
-                                            print(ti.text)
-                                            file1.write(ti.text + '\n')
+#Serial connection to voltage supply
+ser = serial.Serial(
+    port=mySupply.deviceName,
+    timeout=2,
+    parity=serial.PARITY_NONE,
+    stopbits=2,
+    dsrdtr=1
+)
 
 
 class BEER(App):
