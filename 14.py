@@ -27,7 +27,7 @@ from kivy.config import Config
 import time
 import sys
 import os
-sys.path.insert(0, "/opt/rh/rh-python36/root/usr/lib/python3.6/site-packages")
+sys.path.insert(0, '/opt/rh/rh-python36/root/usr/lib/python3.6/site-packages')
 import serial
 
 Window.size = (800,600)
@@ -42,8 +42,8 @@ class Display(BoxLayout):
 		#Print from data from one screen using another
                 def foo2(obj,*args):
                     print('Text of Foo2')
-                    print("Here's the thing: " + str(findByID(s2, 'subID')))
-                    print("Here's the other thing: " + findByID(s2, 'text1').text)
+                    print('Here is the thing: ' + str(findByID(s2, 'subID')))
+                    print('Here is the other thing: ' + findByID(s2, 'text1').text)
 
 		#Recursive function that searches through all widgets for a given ID
                 def findByID(screen, ID):
@@ -69,7 +69,7 @@ class Display(BoxLayout):
                 class Screen_One(Screen):
                     def __init__(self, **kwargs):
                         super(Screen_One, self).__init__(**kwargs)
-                        self.name = "One"
+                        self.name = 'One'
                         
                         #Different colors convey different chip statuses
                         rimg = Image(source='red.png')
@@ -132,6 +132,7 @@ class Display(BoxLayout):
                         vlay = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
                         vlay2 = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
 
+                        #Create list of all voltage values to be looped through in setting and reading them
                         s6v1 = '0.9'
                         s25v1 = '0.8'
                         sn25v1 = '0.9'
@@ -140,7 +141,7 @@ class Display(BoxLayout):
                         sn25v2 = '0.9'
                         values=[s6v1,s25v1,sn25v1,s6v2,s25v2,sn25v2]
 
-
+                        #Blit voltage-controlling elements onto the screen
                         def blitVolt(vallist):
                             Finner2.remove_widget(Finner3)
                             Finner3.clear_widgets()
@@ -152,7 +153,7 @@ class Display(BoxLayout):
                             mySupply.rows = [mySupply.row1, mySupply.row2]
                 
                             if os.path.exists('voltagelog.txt'):
-                                file1 = open("voltagelog.txt","r") 
+                                file1 = open('voltagelog.txt','r') 
                                 nonlocal values
                                 i = 0
                                 for value in values:
@@ -201,6 +202,7 @@ class Display(BoxLayout):
                         Finner2.add_widget(Fvwrite)
                         Finner2.add_widget(initiate)  
 
+                        #Run manually the first time; runs again each time the read button is pushed
                         blitVolt(values)
 
 
@@ -209,18 +211,18 @@ class Display(BoxLayout):
 
 
                         #Buttons to run and kill testing script
-                        begEcho = Button(height=100,text="Connect to Chip", id = 'echo')
-                        kill = Button(height=100,text="Kill All", id = 'kill',background_color=(1,0,0,1))
+                        begEcho = Button(height=100,text='Connect to Chip', id = 'echo')
+                        kill = Button(height=100,text='Kill All', id = 'kill',background_color=(1,0,0,1))
                         begEcho.bind(on_press=myChip.keepEcho)
                         kill.bind(on_press=myChip.killer)
-                        choose = Button(height=10, text="Choose Chip", id = 'choose')
+                        choose = Button(height=10, text='Choose Chip', id = 'choose')
                         
                         #Run check every 1/2 sec
                         Clock.schedule_interval(docheck, 0.5)
                         
                         #Checkbox Section 1
                         Fbox = BoxLayout(orientation='horizontal',padding = [0,0,0,0])
-                        ck = Label(text="Bist (Not Direct)")
+                        ck = Label(text='Bist (Not Direct)')
                         bist = Switch(active=True)
                         Fbox.add_widget(ck)
                         Fbox.add_widget(bist)
@@ -234,7 +236,7 @@ class Display(BoxLayout):
 
                         #Checkbox Section 2
                         Fkeep = BoxLayout(orientation='horizontal',padding = [0,0,0,0], spacing=0)
-                        clab = Label(text="Continue echo")
+                        clab = Label(text='Continue echo')
                         keep = Switch(active=False)
                         Fkeep.add_widget(clab)
                         Fkeep.add_widget(keep)
@@ -249,17 +251,17 @@ class Display(BoxLayout):
                 class Screen_Two(Screen):
                         def __init__(self, **kwargs):
                                 super(Screen_Two, self).__init__(**kwargs)
-                                self.name = "Two"
+                                self.name = 'Two'
                                 
 				#Nested grids allow for better arrangement of widgets
                                 outer = GridLayout(cols=1, pos=(00, 00),size=(Display.width, Display.height))
                                 inner = GridLayout(cols=4, rows=2, padding=100, pos=(00, 00),size=(Display.width, Display.height))
                                 
 				#Add text boxes, check boxes, and corresponding labels
-                                ckL1 = Label(text="Check1: ",halign='right', valign='center')
-                                ckL2 = Label(text="Check2: ",halign='right', valign='center')
-                                txtL1 = Label(text="Text1: ",halign='right', valign='center')
-                                txtL2 = Label(text="Text2: ",halign='right', valign='center')
+                                ckL1 = Label(text='Check1: ',halign='right', valign='center')
+                                ckL2 = Label(text='Check2: ',halign='right', valign='center')
+                                txtL1 = Label(text='Text1: ',halign='right', valign='center')
+                                txtL2 = Label(text='Text2: ',halign='right', valign='center')
                                 ck1 = CheckBox()
                                 ck2 = CheckBox()
                                 txt1 =  TextInput(id='text1')
@@ -271,13 +273,13 @@ class Display(BoxLayout):
                                 outer.add_widget(inner)
                                 
                                 submit = AnchorLayout(anchor_y='bottom',padding = [100,100,100,100])
-                                btnS = Button(height=10, text="Submit", id = 'subID')
+                                btnS = Button(height=10, text='Submit', id = 'subID')
                                 submit.add_widget(btnS)
                                 outer.add_widget(submit)
                                 self.add_widget(outer)
 
                                 def runtest(obj,*args):
-                                        print("From Screen {}:".format(self.name))
+                                        print('From Screen {}:'.format(self.name))
                                         inputs = self.children[0].children[1].children
                                         text_inputs = [inp for inp in inputs if isinstance(inp, TextInput)]
                                         for ti in text_inputs:
@@ -291,7 +293,7 @@ class Display(BoxLayout):
                     def __init__(self, **kwargs):
                         
                         super(Screen_Three, self).__init__(**kwargs)
-                        self.name = "Three"
+                        self.name = 'Three'
                         btnC = Button(text='Text')
                         btnC.bind(on_press = foo2)
                         self.add_widget(btnC)
@@ -299,7 +301,7 @@ class Display(BoxLayout):
                 class Screen_Four(Screen):
                     def __init__(self, **kwargs):
                         super(Screen_Four, self).__init__(**kwargs)
-                        self.name = "Four"
+                        self.name = 'Four'
 
                         class Vbox(BoxLayout):
 
@@ -336,9 +338,9 @@ class Display(BoxLayout):
                     def __init__(self, **kwargs):
                         
                         super(Screen_Five, self).__init__(**kwargs)
-                        self.name = "Five"
+                        self.name = 'Five'
                         
-
+                        #Set current and device variables for the Screen 1 tests; still needs work
                         def setVals(obj):
                             mySupply.deviceName = findByID(s5,'dev').text
                             mySupply.curmax = findByID(s5,'max').text 
@@ -387,6 +389,7 @@ class Display(BoxLayout):
                 s3 = Screen_Three()
                 s4 = Screen_Four()
                 s5 = Screen_Five()
+
                 btn1 = Button(text='GENERAL', on_press=lambda a: sm.switch_to(s1))
                 btn2 = Button(text='BIST', on_press=lambda a: sm.switch_to(s2))
                 btn3 = Button(text='DIRECT', on_press=lambda a: sm.switch_to(s3))
@@ -429,22 +432,22 @@ class chipOn:
         print('Test Time = ' + str(self.testtime))
         os.system('./killall_measurements')
         os.system('rm dump.txt')
-        f=open("dump.txt", "w+")
+        f=open('dump.txt', 'w+')
         f.close()
 
     #Check text file for condition; will be used to evaluate chip state
     def check(self,rimg,gimg,yimg,bimg):
         try:
-            fileHandle = open('dump.txt',"r")
+            fileHandle = open('dump.txt','r')
             lineList = fileHandle.readlines()
             fileHandle.close()
             last = lineList[len(lineList)-3]
             print('2nd-to-last Line: ' + last)
-            if "OK" in last:
+            if 'OK' in last:
                 print('Green')
                 myChip.count=0 if myChip.count<0 else myChip.count+1
                 return gimg
-            elif "Fail" in last:
+            elif 'Fail' in last:
                 print('Red')
                 myChip.count=0 if myChip.count>0 else myChip.count-1
                 return rimg
@@ -455,6 +458,7 @@ class chipOn:
             #print('ERROR gray')
             return bimg
 
+#Contains variables and functions for controlling the voltage supply
 class vSet():
     def __init__(self, **kwargs):
         # make sure we aren't overriding any important functionality
@@ -477,15 +481,15 @@ class vSet():
         self.rows[supply][-1].add_widget(rail)
         self.rows[supply][-1].add_widget(valLay)
         self.rows[supply][-1].add_widget(state)
-        print("Supply: " + str(supply))
+        print('Supply: ' + str(supply))
     
     #Save the current voltage values by finding anchor layouts and reading from their children (the text inputs)
     def save(self,obj):
         try:
-            os.remove("voltagelog.txt")
+            os.remove('voltagelog.txt')
         except:
             pass
-        file1 = open("voltagelog.txt","a+")
+        file1 = open('voltagelog.txt','a+')
         for row in self.rows:
             for child in row:
                 inputs = child.children
@@ -511,7 +515,7 @@ class vSet():
         self.wcom('APPL %s, %s, %s' % (rail,volt,curr))
         self.wcom('OUTPUT:STATE ' + ('ON'))
 
-
+#Objects of the above classes through which the functions and variables in them are used
 myChip = chipOn()
 mySupply = vSet()
 
@@ -523,7 +527,6 @@ ser = serial.Serial(
     stopbits=2,
     dsrdtr=1
 )
-
 
 class BEER(App):
     num1 = 40
@@ -538,5 +541,5 @@ if __name__ == '__main__':
     print('Application Terminated')        
     os.system('./killall_measurements')
     os.system('rm dump.txt')
-    f=open("dump.txt", "w+")
+    f=open('dump.txt', 'w+')
     f.close()
