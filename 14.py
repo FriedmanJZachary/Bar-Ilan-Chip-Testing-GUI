@@ -119,68 +119,12 @@ class Display(BoxLayout):
                                 if myChip.testtime:
                                     os.system('./killall_measurements')
                                     myChip.testtime = False
-                        
 
 
 
 
+                        #_________________________________________
 
-                        #Boxes that contain voltage supply-setting elements 
-                        class Vbox(BoxLayout):
-
-                            def __init__(self, **kwargs):
-                                # make sure we aren't overriding any important functionality
-                                super(Vbox, self).__init__(**kwargs)
-
-                                with self.canvas.before:
-                                    Color(0, .2, .3, 1)  # green; colors range from 0-1 instead of 0-255
-                                    self.rect = Rectangle(size=self.size, pos=self.pos)
-                                    
-                                self.bind(size=self._update_rect, pos=self._update_rect)
-
-                            def _update_rect(self, instance, value):
-                                self.rect.pos = instance.pos
-                                self.rect.size = instance.size
-
-                        def addrow(rail,supply,myID,stateID,value,**kwargs):
-                            rail = Label(text=rail)
-                            valLay  = AnchorLayout(anchor_x='right', anchor_y='center')
-                            val = TextInput(size_hint=(1, None),height=31,multiline=False,text=value,id=myID)
-                            valLay.add_widget(val)
-                            state = Switch(active=True,id=stateID)
-
-                            rows[supply].append(BoxLayout())
-                            rows[supply][-1].add_widget(rail)
-                            rows[supply][-1].add_widget(valLay)
-                            rows[supply][-1].add_widget(state)
-                            print("Supply: " + str(supply))
-                                
-                        def setVoltage(obj):
-                            if findByID(s1, '6state1').active:
-                                setSequence('P6V',findByID(s1, '6sup1').text,'0.2')
-                                time.sleep(0.2)
-                            if findByID(s1, '25state1').active:
-                                setSequence('P25V',findByID(s1, '25sup1').text,'0.2')
-                           
-                        #Save the current voltage values by finding anchor layouts and reading from their children (the text inputs)
-                        def save(obj):
-                            try:
-                                os.remove("voltagelog.txt")
-                            except:
-                                pass
-                            file1 = open("voltagelog.txt","a+") 
-                            for row in rows:
-                                for child in row:
-                                    inputs = child.children
-                                    #print(str(inputs))
-                                    anchor_inputs = [inp for inp in inputs if isinstance(inp, AnchorLayout)]
-                                    for ai in anchor_inputs:
-                                        #print(str(ai))
-                                        text_inputs = ai.children
-                                        for ti in text_inputs:
-                                            print(ti.text)
-                                            file1.write(ti.text + '\n')
-             
 
 
 
@@ -247,14 +191,12 @@ class Display(BoxLayout):
                             for row in rows[1]:
                                 print('blitting row: ' + str(row))
                                 vlay2.add_widget(row)
-                        
 
                             #Joining all sections
                             Finner3.add_widget(vlay)
                             Finner3.add_widget(vlay2)
                             Finner2.add_widget(Finner3, index=2)
  
-
                         #Button to set power supply settings
                         initiate = Button(size_hint_y=None,height=45,text='Initiate', id = 'initiate')
                         initiate.bind(on_press=setVoltage)
@@ -274,14 +216,16 @@ class Display(BoxLayout):
                         blitVolt(values)
 
 
+
 #FINNER1
+
+
                         #Buttons to run and kill testing script
                         begEcho = Button(height=100,text="Connect to Chip", id = 'echo')
                         kill = Button(height=100,text="Kill All", id = 'kill',background_color=(1,0,0,1))
                         begEcho.bind(on_press=myChip.keepEcho)
                         kill.bind(on_press=myChip.killer)
                         choose = Button(height=10, text="Choose Chip", id = 'choose')
-                        
                         
                         #Run check every 1/2 sec
                         Clock.schedule_interval(docheck, 0.5)
@@ -307,7 +251,6 @@ class Display(BoxLayout):
                         Fkeep.add_widget(clab)
                         Fkeep.add_widget(keep)
                         Finner.add_widget(Fkeep)
-                
                   
                         Finner.add_widget(kill)
                         Finner.add_widget(choose)
@@ -315,9 +258,6 @@ class Display(BoxLayout):
                         Fouter.add_widget(Finner2)
                         self.add_widget(Fouter)
 
-    
-                
-                
                 class Screen_Two(Screen):
                         def __init__(self, **kwargs):
                                 super(Screen_Two, self).__init__(**kwargs)
@@ -520,6 +460,69 @@ class chipOn:
             return bimg
 
 myChip = chipOn()
+
+
+
+class vSet():
+
+
+
+                        #Boxes that contain voltage supply-setting elements 
+                        class Vbox(BoxLayout):
+
+                            def __init__(self, **kwargs):
+                                # make sure we aren't overriding any important functionality
+                                super(Vbox, self).__init__(**kwargs)
+
+                                with self.canvas.before:
+                                    Color(0, .2, .3, 1)  # green; colors range from 0-1 instead of 0-255
+                                    self.rect = Rectangle(size=self.size, pos=self.pos)
+                                    
+                                self.bind(size=self._update_rect, pos=self._update_rect)
+
+                            def _update_rect(self, instance, value):
+                                self.rect.pos = instance.pos
+                                self.rect.size = instance.size
+
+                        def addrow(rail,supply,myID,stateID,value,**kwargs):
+                            rail = Label(text=rail)
+                            valLay  = AnchorLayout(anchor_x='right', anchor_y='center')
+                            val = TextInput(size_hint=(1, None),height=31,multiline=False,text=value,id=myID)
+                            valLay.add_widget(val)
+                            state = Switch(active=True,id=stateID)
+
+                            rows[supply].append(BoxLayout())
+                            rows[supply][-1].add_widget(rail)
+                            rows[supply][-1].add_widget(valLay)
+                            rows[supply][-1].add_widget(state)
+                            print("Supply: " + str(supply))
+                                
+                        def setVoltage(obj):
+                            if findByID(s1, '6state1').active:
+                                setSequence('P6V',findByID(s1, '6sup1').text,cur)
+                                time.sleep(0.2)
+                            if findByID(s1, '25state1').active:
+                                setSequence('P25V',findByID(s1, '25sup1').text,cur)
+                           
+                        #Save the current voltage values by finding anchor layouts and reading from their children (the text inputs)
+                        def save(obj):
+                            try:
+                                os.remove("voltagelog.txt")
+                            except:
+                                pass
+                            file1 = open("voltagelog.txt","a+") 
+                            for row in rows:
+                                for child in row:
+                                    inputs = child.children
+                                    #print(str(inputs))
+                                    anchor_inputs = [inp for inp in inputs if isinstance(inp, AnchorLayout)]
+                                    for ai in anchor_inputs:
+                                        #print(str(ai))
+                                        text_inputs = ai.children
+                                        for ti in text_inputs:
+                                            print(ti.text)
+                                            file1.write(ti.text + '\n')
+
 
 class BEER(App):
     num1 = 40
