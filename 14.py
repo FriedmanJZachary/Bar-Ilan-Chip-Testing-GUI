@@ -156,10 +156,12 @@ class Display(BoxLayout):
                             print("Supply: " + str(supply))
                                 
                         def setVoltage(obj):
-                            #setSequence('P25V',findByID(s1, '25sup1').text,'0.2')
                             if findByID(s1, '6state1').active:
                                 setSequence('P6V',findByID(s1, '6sup1').text,'0.2')
-                            
+                                time.sleep(0.2)
+                            if findByID(s1, '25state1').active:
+                                setSequence('P25V',findByID(s1, '25sup1').text,'0.2')
+                           
                         #Save the current voltage values by finding anchor layouts and reading from their children (the text inputs)
                         def save(obj):
                             try:
