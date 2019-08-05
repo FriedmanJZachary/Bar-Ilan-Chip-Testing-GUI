@@ -132,14 +132,6 @@ class Display(BoxLayout):
                         vlay = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
                         vlay2 = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
 
-                        #Create list of all voltage values to be looped through in setting and reading them
-                        s6v1 = '0.9'
-                        s25v1 = '0.8'
-                        sn25v1 = '0.9'
-                        s6v2 = '0.9'
-                        s25v2 = '0.8'
-                        sn25v2 = '0.9'
-                        values=[s6v1,s25v1,sn25v1,s6v2,s25v2,sn25v2]
 
                         #Blit voltage-controlling elements onto the screen
                         def blitVolt(vallist):
@@ -154,21 +146,20 @@ class Display(BoxLayout):
                 
                             if os.path.exists('voltagelog.txt'):
                                 file1 = open('voltagelog.txt','r') 
-                                nonlocal values
                                 i = 0
-                                for value in values:
-                                    values[i] = file1.readline().rstrip()
+                                for value in mySupply.values:
+                                    mySupply.values[i] = file1.readline().rstrip()
                                     print('Value: ' + value)
-                                    print(values)
+                                    print(mySupply.values)
                                     i += 1
 
-                            mySupply.addrow('+6',0,'6sup1','6state1',values[0])
-                            mySupply.addrow('+25',0,'25sup1','25state1',values[1])
-                            mySupply.addrow('-25',0,'-25sup1','-25state1',values[2])
-                            print(values)
-                            mySupply.addrow('+6',1,'6sup2','6state2',values[3])
-                            mySupply.addrow('+25',1,'25sup2','25state2',values[4])
-                            mySupply.addrow('-25',1,'-25sup2','-25state2',values[5])
+                            mySupply.addrow('+6',0,'6sup1','6state1',mySupply.values[0])
+                            mySupply.addrow('+25',0,'25sup1','25state1',mySupply.values[1])
+                            mySupply.addrow('-25',0,'-25sup1','-25state1',mySupply.values[2])
+                            print(mySupply.values)
+                            mySupply.addrow('+6',1,'6sup2','6state2',mySupply.values[3])
+                            mySupply.addrow('+25',1,'25sup2','25state2',mySupply.values[4])
+                            mySupply.addrow('-25',1,'-25sup2','-25state2',mySupply.values[5])
 
 
                             vlay.add_widget(Label(text='Supply 1'))
@@ -187,7 +178,7 @@ class Display(BoxLayout):
                             Finner2.add_widget(Finner3, index=2)
  
                         #Button to set power supply settings
-                        initiate = Button(size_hint_y=None,height=45,text='Initiate', id = 'initiate')
+                        initiate = Button(size_hint_y=None,height=45,text='Set Voltages', id = 'initiate')
                         initiate.bind(on_press=setVoltage)
 
                         #Buttons to write and read voltage values from .txt file
@@ -199,11 +190,12 @@ class Display(BoxLayout):
                         read.bind(on_press=blitVolt)
 
                         Finner2.add_widget(Finner3)
-                        Finner2.add_widget(Fvwrite)
                         Finner2.add_widget(initiate)  
+                        Finner2.add_widget(Fvwrite)
+                        
 
                         #Run manually the first time; runs again each time the read button is pushed
-                        blitVolt(values)
+                        blitVolt(mySupply.values)
 
 
 
@@ -469,18 +461,28 @@ class vSet():
         self.rows = [self.row1, self.row2]
         #Voltage supply configuration
         self.deviceName = '/dev/ttyUSB0'
-        
+        #Create list of all voltage values to be looped through in setting and reading them
+        self.s6v1 = '0.9'
+        self.s25v1 = '0.8'
+        self.sn25v1 = '0.9'
+        self.s6v2 = '0.9'
+        self.s25v2 = '0.8'
+        self.sn25v2 = '0.9'
+        self.values=[self.s6v1,self.s25v1,self.sn25v1,self.s6v2,self.s25v2,self.sn25v2]
+
     def addrow(self,rail,supply,myID,stateID,value,**kwargs):
         rail = Label(text=rail)
         valLay  = AnchorLayout(anchor_x='right', anchor_y='center')
         val = TextInput(size_hint=(1, None),height=31,multiline=False,text=value,id=myID)
-        valLay.add_widget(val)
-        state = Switch(active=True,id=stateID)
+        state = CheckBox(active=True,id=stateID)
+        textopt = TextInput(size_hint=(1, None),height=31,multiline=False)
 
         self.rows[supply].append(BoxLayout())
         self.rows[supply][-1].add_widget(rail)
-        self.rows[supply][-1].add_widget(valLay)
+        self.rows[supply][-1].add_widget(val)
+        self.rows[supply][-1].add_widget(textopt)
         self.rows[supply][-1].add_widget(state)
+
         print('Supply: ' + str(supply))
     
     #Save the current voltage values by finding anchor layouts and reading from their children (the text inputs)
