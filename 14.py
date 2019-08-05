@@ -126,7 +126,6 @@ class Display(BoxLayout):
                         Finner2 = BoxLayout(orientation='vertical',padding = [30,30,30,30], spacing=20)
                         Finner3 = BoxLayout(orientation='vertical',padding = [30,30,30,30], spacing=20)
                         Fvwrite = BoxLayout(orientation='horizontal',padding = [0,0,0,0],spacing=0,size_hint_y=None,height=45)
-
 #FINNER2
                         #Power supply control sections
                         vlay = Vbox(orientation='vertical',padding = [10,10,10,10], spacing=10)
@@ -150,7 +149,6 @@ class Display(BoxLayout):
                                 for value in mySupply.values:
                                     mySupply.values[i] = file1.readline().rstrip()
                                     print('Value: ' + value)
-                                    print(mySupply.values)
                                     i += 1
 
                             mySupply.addrow('+6',0,'6sup1','6state1',mySupply.values[0])
@@ -196,11 +194,7 @@ class Display(BoxLayout):
 
                         #Run manually the first time; runs again each time the read button is pushed
                         blitVolt(mySupply.values)
-
-
-
 #FINNER1
-
 
                         #Buttons to run and kill testing script
                         begEcho = Button(height=100,text='Connect to Chip', id = 'echo')
@@ -352,6 +346,12 @@ class Display(BoxLayout):
                             advrows[-1].add_widget(lab)
                             advrows[-1].add_widget(valLay)
 
+
+                        if os.path.exists('advlog.txt'):
+                            file1 = open('advlog.txt','r') 
+                            mySupply.deviceName = file1.readline().rstrip()
+                            mySupply.curmax = file1.readline().rstrip()
+
                         addrow('Supply 1 Location',mySupply.deviceName,'dev')
                         addrow('Maximum Current',mySupply.curmax,'max')
                         for row in advrows:
@@ -470,6 +470,16 @@ class vSet():
         self.sn25v2 = '0.9'
         self.values=[self.s6v1,self.s25v1,self.sn25v1,self.s6v2,self.s25v2,self.sn25v2]
 
+        #Serial connection to voltage supply
+        self.ser = serial.Serial(
+            port=self.deviceName,
+            timeout=2,
+            parity=serial.PARITY_NONE,
+            stopbits=2,
+            dsrdtr=1
+            )
+
+    #Add row to voltage supply section
     def addrow(self,rail,supply,myID,stateID,value,**kwargs):
         rail = Label(text=rail)
         valLay  = AnchorLayout(anchor_x='right', anchor_y='center')
@@ -492,22 +502,22 @@ class vSet():
         except:
             pass
         file1 = open('voltagelog.txt','a+')
-        for row in self.rows:
-            for child in row:
-                inputs = child.children
-                #print(str(inputs))
-                anchor_inputs = [inp for inp in inputs if isinstance(inp, AnchorLayout)]
-                for ai in anchor_inputs:
-                    #print(str(ai))
-                    text_inputs = ai.children
-                    for ti in text_inputs:
-                        print(ti.text)
-                        file1.write(ti.text + '\n')
+        for value in self.values:
+            file1.write(value + '\n')
+            print(value)
 
+        try:
+            os.remove('advlog.txt')
+        except:
+            pass
+        file2 = open('advlog.txt','a+')
+        file2.write(self.deviceName + '\n')
+        file2.write(self.curmax + '\n')
+            
     #Writes a command directy to the supply
     def wcom(self,cmd):
         cmd += '\n'
-        ser.write(cmd.encode(encoding='ascii',errors='strict'))
+        self.ser.write(cmd.encode(encoding='ascii',errors='strict'))
 
     #Sequentially shuts supply, sets voltage and current values, and turns the supply back on
     def setSequence(self,rail,volt,curr):
@@ -521,15 +531,6 @@ class vSet():
 myChip = chipOn()
 mySupply = vSet()
 
-#Serial connection to voltage supply
-ser = serial.Serial(
-    port=mySupply.deviceName,
-    timeout=2,
-    parity=serial.PARITY_NONE,
-    stopbits=2,
-    dsrdtr=1
-)
-
 class BEER(App):
     num1 = 40
     def build(self):
@@ -540,7 +541,8 @@ if __name__ == '__main__':
     myapp = BEER()
     myapp.run()     
     #Anything below this point will run only after the window is closed
-    print('Application Terminated')        
+    print('Application Terminated') 
+    #Clean up
     os.system('./killall_measurements')
     os.system('rm dump.txt')
     f=open('dump.txt', 'w+')
