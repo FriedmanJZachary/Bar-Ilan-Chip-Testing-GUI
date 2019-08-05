@@ -32,18 +32,9 @@ import serial
 
 Window.size = (800,600)
 
-def myprint(obj,*args):
-    print('BUTTON CLICKED')
-
 class Display(BoxLayout):
         def __init__(self, **kwargs):
                 super(Display, self).__init__(**kwargs)
-
-		#Print from data from one screen using another
-                def foo2(obj,*args):
-                    print('Text of Foo2')
-                    print('Here is the thing: ' + str(findByID(s2, 'subID')))
-                    print('Here is the other thing: ' + findByID(s2, 'text1').text)
 
 		#Recursive function that searches through all widgets for a given ID
                 def findByID(screen, ID):
@@ -51,17 +42,12 @@ class Display(BoxLayout):
                     def findID(screen, ID):
                         if screen.children:
                             for child in screen.children:
-                                #print('Child: ' + str(child))
-                                #print('ID: ' + str(child.id))
                                 if str(child.id) == ID:
-                                    #print('Gotchya')
                                     findByID.selectedChild = child
-                                    #print('Selected Child: ' + str(findByID.selectedChild))
                                     return 1
                                 else:
                                     findID(child, ID)
                     findID(screen, ID)
-                    print('Selected Child: ' + str(findByID.selectedChild))
                     return findByID.selectedChild
 
                 #Screens are their own classes, formed within the initialization of the display itself
@@ -78,23 +64,24 @@ class Display(BoxLayout):
                         bimg = Image(source='gray.png')
                         curimg = bimg
                         
+                        #Do not run test by default
                         killedAlready = True
+
                         #Checks the state of .txt file
                         def docheck(obj,*args):
                             checkval = 10
                             if abs(myChip.count) < checkval or keep.active == True:
-                                #print('Check Confirmed')
                                 nonlocal curimg
                                 curimg = myChip.check(rimg, gimg, yimg, bimg)
                                 Fimg.clear_widgets()
                                 Fimg.add_widget(begEcho)
                                 Fimg.add_widget(curimg)
-                                #print('Count = ' + str(myChip.count))
                             else:
                                 if myChip.testtime:
                                     os.system('./killall_measurements')
                                     myChip.testtime = False
 
+                        #Set voltage on voltage suppl(y/ies)
                         def setVoltage(obj):
                             if findByID(s1, '6state1').active:
                                 mySupply.setSequence('P6V',findByID(s1, '6sup1').text,mySupply.curmax)
@@ -120,9 +107,9 @@ class Display(BoxLayout):
                                 self.rect.pos = instance.pos
                                 self.rect.size = instance.size
 
-
+                        #Nested layouts
                         Fouter = BoxLayout(orientation='horizontal',padding = [0,0,0,0])
-                        Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=60)
+                        Finner = BoxLayout(orientation='vertical',padding = [50,50,50,50], spacing=40)
                         Finner2 = BoxLayout(orientation='vertical',padding = [30,30,30,30], spacing=20)
                         Finner3 = BoxLayout(orientation='vertical',padding = [30,30,30,30], spacing=20)
                         Fvwrite = BoxLayout(orientation='horizontal',padding = [0,0,0,0],spacing=0,size_hint_y=None,height=45)
@@ -142,35 +129,34 @@ class Display(BoxLayout):
                             mySupply.row1 = []
                             mySupply.row2 = []
                             mySupply.rows = [mySupply.row1, mySupply.row2]
-                
+                            
+                            #Use saved voltage values if present
                             if os.path.exists('voltagelog.txt'):
                                 file1 = open('voltagelog.txt','r') 
                                 i = 0
                                 for value in mySupply.values:
                                     mySupply.values[i] = file1.readline().rstrip()
-                                    print('Value: ' + value)
                                     i += 1
 
+                            #Create rows
                             mySupply.addrow('+6',0,'6sup1','6state1',mySupply.values[0])
                             mySupply.addrow('+25',0,'25sup1','25state1',mySupply.values[1])
                             mySupply.addrow('-25',0,'-25sup1','-25state1',mySupply.values[2])
-                            print(mySupply.values)
                             mySupply.addrow('+6',1,'6sup2','6state2',mySupply.values[3])
                             mySupply.addrow('+25',1,'25sup2','25state2',mySupply.values[4])
                             mySupply.addrow('-25',1,'-25sup2','-25state2',mySupply.values[5])
 
-
+                            #Add supply 1 rows to voltage box
                             vlay.add_widget(Label(text='Supply 1'))
                             for row in mySupply.rows[0]:
-                                print('blitting row: ' + str(row))
                                 vlay.add_widget(row)
                                 
+                            #Add supply 2 rows to voltage box
                             vlay2.add_widget(Label(text='Supply 2'))
                             for row in mySupply.rows[1]:
-                                print('blitting row: ' + str(row))
                                 vlay2.add_widget(row)
 
-                            #Joining all sections
+                            #Joining sections
                             Finner3.add_widget(vlay)
                             Finner3.add_widget(vlay2)
                             Finner2.add_widget(Finner3, index=2)
@@ -187,6 +173,7 @@ class Display(BoxLayout):
                         Fvwrite.add_widget(read)
                         read.bind(on_press=blitVolt)
 
+                        #Joining sections
                         Finner2.add_widget(Finner3)
                         Finner2.add_widget(initiate)  
                         Finner2.add_widget(Fvwrite)
@@ -197,12 +184,14 @@ class Display(BoxLayout):
 #FINNER1
 
                         #Buttons to run and kill testing script
-                        begEcho = Button(height=100,text='Connect to Chip', id = 'echo')
-                        kill = Button(height=100,text='Kill All', id = 'kill',background_color=(1,0,0,1))
+                        begEcho = Button(height=10,text='Connect to Chip', id = 'echo')
+                        kill = Button(height=10,text='Kill All', id = 'kill',background_color=(1,0,0,1))
                         begEcho.bind(on_press=myChip.keepEcho)
                         kill.bind(on_press=myChip.killer)
                         choose = Button(height=10, text='Choose Chip', id = 'choose')
-                        
+                        setsup = Button(height=10,text='Set Supply', id = 'set')
+                        setsup.bind(on_press=mySupply.serialSet)
+
                         #Run check every 1/2 sec
                         Clock.schedule_interval(docheck, 0.5)
                         
@@ -228,7 +217,9 @@ class Display(BoxLayout):
                         Fkeep.add_widget(keep)
                         Finner.add_widget(Fkeep)
                   
+                        #Joining sections
                         Finner.add_widget(kill)
+                        Finner.add_widget(setsup)
                         Finner.add_widget(choose)
                         Fouter.add_widget(Finner)
                         Fouter.add_widget(Finner2)
@@ -238,88 +229,20 @@ class Display(BoxLayout):
                         def __init__(self, **kwargs):
                                 super(Screen_Two, self).__init__(**kwargs)
                                 self.name = 'Two'
-                                
-				#Nested grids allow for better arrangement of widgets
-                                outer = GridLayout(cols=1, pos=(00, 00),size=(Display.width, Display.height))
-                                inner = GridLayout(cols=4, rows=2, padding=100, pos=(00, 00),size=(Display.width, Display.height))
-                                
-				#Add text boxes, check boxes, and corresponding labels
-                                ckL1 = Label(text='Check1: ',halign='right', valign='center')
-                                ckL2 = Label(text='Check2: ',halign='right', valign='center')
-                                txtL1 = Label(text='Text1: ',halign='right', valign='center')
-                                txtL2 = Label(text='Text2: ',halign='right', valign='center')
-                                ck1 = CheckBox()
-                                ck2 = CheckBox()
-                                txt1 =  TextInput(id='text1')
-                                txt2 = TextInput()
-                                
-                                widList = [ckL1, ck1, txtL1, txt1, ckL2, ck2, txtL2, txt2]
-                                for wid in widList:
-                                    inner.add_widget(wid)
-                                outer.add_widget(inner)
-                                
-                                submit = AnchorLayout(anchor_y='bottom',padding = [100,100,100,100])
-                                btnS = Button(height=10, text='Submit', id = 'subID')
-                                submit.add_widget(btnS)
-                                outer.add_widget(submit)
-                                self.add_widget(outer)
-
-                                def runtest(obj,*args):
-                                        print('From Screen {}:'.format(self.name))
-                                        inputs = self.children[0].children[1].children
-                                        text_inputs = [inp for inp in inputs if isinstance(inp, TextInput)]
-                                        for ti in text_inputs:
-                                                print(ti.text)
-                                        print('test: ' + self.children[0].children[1].children[4].text)
-                                 
-                                btnS.bind(on_press=runtest)
-
 
                 class Screen_Three(Screen):
                     def __init__(self, **kwargs):
                         
                         super(Screen_Three, self).__init__(**kwargs)
                         self.name = 'Three'
-                        btnC = Button(text='Text')
-                        btnC.bind(on_press = foo2)
-                        self.add_widget(btnC)
-                            
+                
                 class Screen_Four(Screen):
                     def __init__(self, **kwargs):
                         super(Screen_Four, self).__init__(**kwargs)
                         self.name = 'Four'
 
-                        class Vbox(BoxLayout):
 
-                            def __init__(self, **kwargs):
-                                # make sure we aren't overriding any important functionality
-                                super(Vbox, self).__init__(**kwargs)
-
-                                with self.canvas.before:
-                                    Color(.5, .5, .6, 1)  # green; colors range from 0-1 instead of 0-255
-                                    self.rect = Rectangle(size=self.size, pos=self.pos)
-                                    
-                                self.bind(size=self._update_rect, pos=self._update_rect)
-
-                            def _update_rect(self, instance, value):
-                                self.rect.pos = instance.pos
-                                self.rect.size = instance.size
-
-                        vlay = Vbox(orientation='horizontal',padding = [10,10,10,10], spacing=10)
-                        vlay2 = Vbox(orientation='horizontal',padding = [10,10,10,10], spacing=10)
-                        outer = BoxLayout(orientation='vertical',padding = [10,10,10,10], spacing=10)
-                        
-                        l1 = Label(text='label 1')
-                        l2 = Label(text='label 2')
-                        vlay.add_widget(l1)
-                        vlay2.add_widget(l2)
-
-              
-                        outer.add_widget(vlay)
-                        outer.add_widget(vlay2)
-                        self.add_widget(outer)
-
-
+                #Advanced Settings Screen
                 class Screen_Five(Screen):
                     def __init__(self, **kwargs):
                         
@@ -331,11 +254,14 @@ class Display(BoxLayout):
                             mySupply.deviceName = findByID(s5,'dev').text
                             mySupply.curmax = findByID(s5,'max').text 
 
+                        #Layout elements and nested layouts
                         outer = BoxLayout(orientation='horizontal', padding = [50,50,50,50])
                         inner = BoxLayout(orientation='vertical')
                         empty = Image(source='blank.png')
 
+
                         advrows = []
+                        #Adding input rows
                         def addrow(lab,txt,myID):
                             lab = Label(text=lab)
                             valLay  = AnchorLayout(anchor_x='right', anchor_y='center')
@@ -346,12 +272,13 @@ class Display(BoxLayout):
                             advrows[-1].add_widget(lab)
                             advrows[-1].add_widget(valLay)
 
-
+                        #If present, load saved 'advanced settings' values
                         if os.path.exists('advlog.txt'):
                             file1 = open('advlog.txt','r') 
                             mySupply.deviceName = file1.readline().rstrip()
                             mySupply.curmax = file1.readline().rstrip()
 
+                        #Add rows
                         addrow('Supply 1 Location',mySupply.deviceName,'dev')
                         addrow('Maximum Current',mySupply.curmax,'max')
                         for row in advrows:
@@ -361,6 +288,7 @@ class Display(BoxLayout):
                         submit.bind(on_press=setVals)
                         inner.add_widget(submit)
 
+                        #Join sections together
                         outer.add_widget(inner)
                         outer.add_widget(empty)
                         self.add_widget(outer)
@@ -375,7 +303,7 @@ class Display(BoxLayout):
                     Color(0, 0.05, 0.15)
                     Rectangle(pos=(0, 0), size=(2000, 2000))
                 
-                #create screens (as instances of the above classes) and buttons to navigate between them
+                #Create screens (as instances of the above classes) and buttons to navigate between them
                 s1 = Screen_One()
                 s2 = Screen_Two()
                 s3 = Screen_Three()
@@ -479,6 +407,16 @@ class vSet():
             dsrdtr=1
             )
 
+    def serialSet(self,obj):
+        #Serial connection to voltage supply
+        self.ser = serial.Serial(
+            port=self.deviceName,
+            timeout=2,
+            parity=serial.PARITY_NONE,
+            stopbits=2,
+            dsrdtr=1
+            )
+
     #Add row to voltage supply section
     def addrow(self,rail,supply,myID,stateID,value,**kwargs):
         rail = Label(text=rail)
@@ -492,11 +430,10 @@ class vSet():
         self.rows[supply][-1].add_widget(val)
         self.rows[supply][-1].add_widget(textopt)
         self.rows[supply][-1].add_widget(state)
-
-        print('Supply: ' + str(supply))
     
     #Save the current voltage values by finding anchor layouts and reading from their children (the text inputs)
     def save(self,obj):
+        #Save voltage values
         try:
             os.remove('voltagelog.txt')
         except:
@@ -504,8 +441,8 @@ class vSet():
         file1 = open('voltagelog.txt','a+')
         for value in self.values:
             file1.write(value + '\n')
-            print(value)
 
+        #Save 'advanced settings' values
         try:
             os.remove('advlog.txt')
         except:
